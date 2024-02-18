@@ -1,6 +1,11 @@
+
 package org.carlmontrobotics.subsystems;
 
 import static org.carlmontrobotics.Constants.*;
+
+import java.lang.annotation.Target;
+
+import org.carlmontrobotics.Constants;
 import org.carlmontrobotics.Robot;
 import org.carlmontrobotics.RobotContainer;
 import org.carlmontrobotics.lib199.MotorConfig;
@@ -44,6 +49,9 @@ public class Intake extends SubsystemBase {
     private final MutableMeasure<Voltage> voltage = mutable(Volts.of(0));
     private final MutableMeasure<Velocity<Angle>> angularVel = mutable(RotationsPerSecond.of(0));
     private final MutableMeasure<Angle> distance = mutable(Rotations.of(0));
+    private static double kS = Constants.kS;
+    private static double kA = Constants.kA;
+    private static double kV = Constants.kV;
     private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA); //double check constants | PLEASE TUNE IT TOMORROW TO FULLY TEST IT
     private TimeOfFlight distanceSensor = new TimeOfFlight(dsPort1); //make sure id port is correct here
     private TimeOfFlight distanceSenor2 = new TimeOfFlight(dsPort2); // insert 
@@ -56,6 +64,12 @@ public class Intake extends SubsystemBase {
         // kinda no works. | motor.getEncoder().setPositionConversionFactor(2 * Math.PI * 2); //This will be different since the wheel diamters will not be the same. THIS IS FOR DISTANCE
         pid.setP(kP);
         pid.setD(kD);
+        SmartDashboard.putNumber("kP" , kP);
+        SmartDashboard.putNumber("kD", kD);
+        SmartDashboard.putNumber("kI", kI);
+        SmartDashboard.putNumber("kA" , kA);
+        SmartDashboard.putNumber("kS", kS);
+        SmartDashboard.putNumber("kV", kV);
         
         //SmartDashboard.putNumber("motorSpeed", 0); //Enter Positive Number for intake
         //SmartDashboard.putBoolean("useRPMSpeed", false);
@@ -82,6 +96,9 @@ public class Intake extends SubsystemBase {
         kP = SmartDashboard.getNumber("kP", kP);
         kD = SmartDashboard.getNumber("kD", kD);
         kI = SmartDashboard.getNumber("kI", kI);
+        kA = SmartDashboard.getNumber("kA", kA);
+        kS = SmartDashboard.getNumber("kS", kS);
+        kV = SmartDashboard.getNumber("kV", kV);
         SmartDashboard.putBoolean("distance sensor 1", gameDistanceSees1st());
         SmartDashboard.putBoolean("distance sensor 2", gameDistanceSees2nd());
         SmartDashboard.putNumber("CurrentMotorRPM", motorEncoder.getVelocity()); //Enter Positive Number for intake
@@ -103,12 +120,12 @@ public class Intake extends SubsystemBase {
         if(!gameDistanceSees1st()) {
             pid.setReference((-TargetRPM), CANSparkBase.ControlType.kVelocity,0, feedforward.calculate(-TargetRPM/60));
          } else {    
-            pid.setReference(-1, CANSparkBase.ControlType.kVelocity,0,feedforward.calculate(-1/60));
+            pid.setReference((-TargetRPM), CANSparkBase.ControlType.kVelocity,0,feedforward.calculate(-TargetRPM/240));
             if(gameDistanceSees2nd()) {
                 pid.setReference(0, CANSparkBase.ControlType.kVelocity,0,feedforward.calculate(0));
             } 
         }
-         }
+    }
     
 
     //Ahead are Sysid tests
